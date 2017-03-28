@@ -73,24 +73,28 @@ def verify_feat_importance(train_data):
 
     target = train_data['SalePrice']
     features = train_data.drop(['Id', 'SalePrice'], axis=1)
+    
+    feature_names = features.columns
 
     # no text allowed anymore
     clf = RandomForestClassifier()
     clf.fit(features, target)
+    
 
     importances = clf.feature_importances_
-    indices = np.argsort(importances)[::-1]
-
-    print('Feature ranking: ')
-    for f in range(features.shape[1]):
-        print('%d. feature %d (%f)' % (f + 1, indices[f],
-              importances[indices[f]]))
+    d ={'names':feature_names, 'importances':importances}
+    
+    df = pd.DataFrame(d, columns=['names', 'importances'])
+    df = df.sort_values(by='importances', ascending=False)
+    
+    print(df)
 
     plt.figure()
-    plt.bar(range(features.shape[1]), importances[indices],
+    plt.bar(range(features.shape[1]), df['importances'],
             color='r', align='center')
-    plt.xticks(range(features.shape[1]), indices)
-    plt.xlim([-1, features.shape[1]])
+    plt.xticks(range(features.shape[1]),
+               df['names'], rotation=90)
+    plt.xlim([-1, features.shape[1]/3])
     plt.show()
 
     return
@@ -155,6 +159,7 @@ def inference_analysis(variable):
 
 
 def plot_corr_matrix(train_data):
+    plt.figure()
     k = 10  # number of variables for heatmap
     corrmat = train_data.corr()
     cols = corrmat.nlargest(k, 'SalePrice')['SalePrice'].index
@@ -241,13 +246,6 @@ def format_submission(predictions):
     return
 
 
-### gibt schrott !!!!
-def enc_data(train_data):
-    print(train_data.head(10))
-    enc = train_data.apply(LabelEncoder().fit_transform)
-    print(enc.head(10))
-    return enc 
-
 """ start """
 train_data, test_data = load_data()
 print('original shape of train_data: ', train_data.shape)
@@ -257,19 +255,17 @@ prep_analysis_sheet(train_data)
 # MISSING VALUES
 analyze_missing_data(train_data)
 train_data = deal_with_missing_data(train_data)
-print('missing values: ', train_data.isnull().sum().max())
-print("shape of train data, after missing values deletion:", train_data.shape)
+#print('missing values: ', train_data.isnull().sum().max())
+#print("shape of train data, after missing values deletion:", train_data.shape)
 
 
-enc_train_data = enc_data(train_data)
-#verify_feat_importance(enc_train_data)
 
 # HANDLE CATEGORICAL VARIABLES
 train_data = handle_cat_data(train_data)
-print("shape after convertion of cat features to dummies:",
-      train_data.shape)
+#print("shape after convertion of cat features to dummies:",
+#      train_data.shape)
 
-
+verify_feat_importance(train_data)
 
 plot_corr_matrix(train_data)
 
