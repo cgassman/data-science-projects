@@ -73,23 +73,22 @@ def verify_feat_importance(train_data):
 
     target = train_data['SalePrice']
     features = train_data.drop(['Id', 'SalePrice'], axis=1)
-    
+
     feature_names = features.columns
 
     # no text allowed anymore
     clf = RandomForestClassifier()
     clf.fit(features, target)
-    
 
     importances = clf.feature_importances_
-    d ={'names':feature_names, 'importances':importances}
-    
+    d = {'names': feature_names, 'importances': importances}
+
     df = pd.DataFrame(d, columns=['names', 'importances'])
     df = df.sort_values(by='importances', ascending=False)
-    
+
     print(df)
 
-    plt.figure()
+    plt.figure(figsize=(20, 12))
     plt.bar(range(features.shape[1]), df['importances'],
             color='r', align='center')
     plt.xticks(range(features.shape[1]),
@@ -258,8 +257,6 @@ train_data = deal_with_missing_data(train_data)
 #print('missing values: ', train_data.isnull().sum().max())
 #print("shape of train data, after missing values deletion:", train_data.shape)
 
-
-
 # HANDLE CATEGORICAL VARIABLES
 train_data = handle_cat_data(train_data)
 #print("shape after convertion of cat features to dummies:",
@@ -275,23 +272,15 @@ descriptive_analysis(train_data["MasVnrArea"])  # ebenfalls log-traf versuchen
 descriptive_analysis(train_data["TotalBsmtSF"])  # log-trafo
 descriptive_analysis(train_data["GrLivArea"])  # log-trafo? komische figur
 
+# FEATURE SELECTION 
+
+                     
 # SPLIT INTO TRAIN AND VALID
 X_train, X_valid, y_train, y_valid = split_data(train_data)
-#print('shape X_train: ', X_train.shape)
-#print('shape y_train: ', y_train.shape)
-#print('shape X_valid: ', X_valid.shape)
-#print('shape y_valid: ', y_valid.shape)
-
-
-
 
 # BUILD MODEL
-#clf_init_comparison(X_train, X_valid, y_train, y_valid)
+#clf_initial_comparison(X_train, X_valid, y_train, y_valid)
 
-
-#
-#
-## CONTINUE TO WORK WITH TRAIN SPLIT ONLY !!!
 #
 ## train models on X_train and Y_train
 #rf = RandomForestClassifier()
