@@ -69,7 +69,7 @@ def prep_analysis_sheet(features):
                     header=True, index=False)
 
 
-def verify_feat_importance(train_data):
+def verify_feat_importance_rf(train_data):
 
     target = train_data['SalePrice']
     features = train_data.drop(['Id', 'SalePrice'], axis=1)
@@ -141,7 +141,7 @@ def deal_with_missing_data(train_data):
     return(train_data)
 
 
-def descriptive_analysis(variable):
+def descriptive_analysis_num(variable):
 
     print("variable {}".format(variable.name))
     print(variable.describe())
@@ -149,6 +149,15 @@ def descriptive_analysis(variable):
 
     plt.figure()
     sns.distplot(variable)
+
+    return
+
+
+def descriptive_analysis_cat(variable):
+
+    print("variable {}".format(variable.name))
+    plt.figure()
+    sns.barplot(variable)
 
     return
 
@@ -176,7 +185,7 @@ def plot_corr_matrix(train_data):
 
 def handle_cat_data(train_data):
     """ convert all object and """
-    return pd.get_dummies(train_data, drop_first=True)
+    return pd.get_dummies(train_data, drop_first=True, dummy_na=True)
 
 
 def handle_num_data(train_data, var_name, func):
@@ -184,10 +193,9 @@ def handle_num_data(train_data, var_name, func):
     return
 
 
-def clf_initial_comparison(X_train, X_valid, y_train, y_valid):
+def regression_initial_comparison(X_train, X_valid, y_train, y_valid):
 
-    classifiers = [RandomForestClassifier(),
-                   LinearRegression(),
+    reg_models = [LinearRegression(),
                    Lasso(),
                    ElasticNet(),
                    Ridge(),
@@ -195,44 +203,39 @@ def clf_initial_comparison(X_train, X_valid, y_train, y_valid):
                    NuSVR(),
                    LinearSVR()]
 
-    log_cols = ["Classifier", "Accuracy", "Loss"]
+    log_cols = ["RegressionModel", "Loss"]
     log = pd.DataFrame(columns=log_cols)
 
-    for clf in classifiers:
-        clf.fit(X_train, y_train)
+    for reg in reg_models:
+        reg.fit(X_train, y_train)
 
-        name = clf.__class__.__name__
+        name = reg.__class__.__name__
 
         print("=" * 30)
         print(name)
 
-        print('**** Results ****')
-        train_predictions = clf.predict(X_valid)
-        acc = accuracy_score(y_valid, train_predictions)
-        print("Accuracy: {:.4%}".format(acc))
-
-        train_predictions = clf.predict_proba(X_valid)
+        train_predictions = reg.predict(X_valid)
         loss = mean_squared_error(y_valid, train_predictions)
         print("Loss: {}".format(loss))
 
-        log_entry = pd.DataFrame([[name, acc*100, loss]], columns=log_cols)
+        log_entry = pd.DataFrame([[name, loss]], columns=log_cols)
         log = log.append(log_entry)
 
     print("="*30)
 
-    sns.set_color_codes("muted")
-    sns.barplot(x='Accuracy', y='Classifier', data=log, color='b')
-
-    plt.xlabel('Accuracy %')
-    plt.title('Classifier Accuracy')
-    plt.show()
-
-    sns.set_color_codes("muted")
-    sns.barplot(x='Mean Square', y='Classifier', data=log, color='g')
-
-    plt.xlabel('Mean Square Loss')
-    plt.title('Classifier Mean Square Loss')
-    plt.show()
+#    sns.set_color_codes("muted")
+#    sns.barplot(x='Accuracy', y='Classifier', data=log, color='b')
+#
+#    plt.xlabel('Accuracy %')
+#    plt.title('Classifier Accuracy')
+#    plt.show()
+#
+#    sns.set_color_codes("muted")
+#    sns.barplot(x='Mean Square', y='Classifier', data=log, color='g')
+#
+#    plt.xlabel('Mean Square Loss')
+#    plt.title('Classifier Mean Square Loss')
+#    plt.show()
 
 
 def format_submission(predictions):
@@ -252,6 +255,17 @@ print('original shape of train_data: ', train_data.shape)
 
 prep_analysis_sheet(train_data)
 
+# brute force feature relevance and benchmark
+brute_force_traindata = handle_cat_data(train_data)
+brute_force_traindata = brute_force_traindata.dropna(axis=0)
+verify_feat_importance_rf(brute_force_traindata)
+
+X_train_bruteforce, X_valid_bruteforce, y_train_bruteforce, y_valid_bruteforce\
+    = split_data(brute_force_traindata)
+
+regression_initial_comparison(X_train_bruteforce, X_valid_bruteforce,
+                    y_train_bruteforce, y_valid_bruteforce)
+
 # MISSING VALUES
 analyze_missing_data(train_data)
 train_data = deal_with_missing_data(train_data)
@@ -265,16 +279,19 @@ train_data = handle_cat_data(train_data)
 #print("shape after convertion of cat features to dummies:",
 #      train_data.shape)
 
-verify_feat_importance(train_data)
-
+#verify_feat_importance_rf(train_data)
+features_to_correlate = train_data.select_dtypes\
+                        (include = ['float64', 'int64']).iloc[:, 1:]
 plot_corr_matrix(train_data)
 
 # ANALYSE NUMERICAL VARIABLES
-descriptive_analysis(train_data["LotArea"])  # log transformation
-descriptive_analysis(train_data["MasVnrArea"])  # ebenfalls log-traf versuchen
-descriptive_analysis(train_data["TotalBsmtSF"])  # log-trafo
-descriptive_analysis(train_data["GrLivArea"])  # log-trafo? komische figur
-
+descriptive_analysis_num(train_data["SalePrice"])
+descriptive_analysis_num(train_data["LotArea"])  # log transformation
+descriptive_analysis_num(train_data["MasVnrArea"])  # ebenfalls log-traf versuchen
+descriptive_analysis_num(train_data["TotalBsmtSF"])  # log-trafo
+descriptive_analysis_num(train_data["GrLivArea"])  # log-trafo? komische figur
+descriptive_analysis_cat(train_data["OverallQual"]) 
+                    
 # SPLIT INTO TRAIN AND VALID
 X_train, X_valid, y_train, y_valid = split_data(train_data)
 #print('shape X_train: ', X_train.shape)
@@ -286,7 +303,7 @@ X_train, X_valid, y_train, y_valid = split_data(train_data)
 
 
 # BUILD MODEL
-#clf_init_comparison(X_train, X_valid, y_train, y_valid)
+#clf_initial_comparison(X_train, X_valid, y_train, y_valid)
 
 
 #
