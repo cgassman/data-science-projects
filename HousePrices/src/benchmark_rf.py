@@ -53,19 +53,32 @@ def prep_analysis_sheet(features):
     # prepare data analysis sheet
     attributes = list(features.columns.values)
     attr_types = list(features.dtypes)
+    missing_val = list(features.isnull().sum()/features.isnull().count()*100)
 
     overview = pd.DataFrame({"AttributeNames": attributes,
                              "DataType": attr_types,
                              "VarType": "",
+                             "MissingDataPerc": missing_val,
+                             "Outliers": "",
+                             "Normality":"",
+                             "Homoscedasticity":"",
+                             "Linearity":"",
+                             "IndependenceErrors":"",
                              "Expectation": "",
                              "Conclusion": "",
                              "Comments": ""})
     overview.to_csv("../output/overview.csv", columns=["AttributeNames",
                                                        "DataType", "VarType",
+                                                       "MissingDataPerc",
+                                                       "Outliers",
+                                                       "Normality",
+                                                       "Homoscedasticity",
+                                                       "Linearity",
+                                                       "IndependenceErrors",
                                                        "Expectation",
                                                        "Conclusion",
                                                        "Comments"],
-                    header=True, index=False)
+                    header=True, index=False, float_format='%.0f%%')
 
 
 def verify_feat_importance_rf(train_data):
@@ -281,24 +294,24 @@ features_to_correlate = train_data.select_dtypes\
 plot_corr_matrix(train_data)
 
 # ANALYSE NUMERICAL VARIABLES
-<<<<<<< HEAD
-descriptive_analysis(train_data["LotArea"])  # log transformation
-descriptive_analysis(train_data["MasVnrArea"])  # ebenfalls log-traf versuchen
-descriptive_analysis(train_data["TotalBsmtSF"])  # log-trafo
-descriptive_analysis(train_data["GrLivArea"])  # log-trafo? komische figur
-
-# FEATURE SELECTION 
-
-                     
-=======
-descriptive_analysis_num(train_data["SalePrice"])
-descriptive_analysis_num(train_data["LotArea"])  # log transformation
-descriptive_analysis_num(train_data["MasVnrArea"])  # ebenfalls log-traf versuchen
-descriptive_analysis_num(train_data["TotalBsmtSF"])  # log-trafo
-descriptive_analysis_num(train_data["GrLivArea"])  # log-trafo? komische figur
-descriptive_analysis_cat(train_data["OverallQual"]) 
-                    
->>>>>>> origin/master
+#<<<<<<< HEAD
+#descriptive_analysis(train_data["LotArea"])  # log transformation
+#descriptive_analysis(train_data["MasVnrArea"])  # ebenfalls log-traf versuchen
+#descriptive_analysis(train_data["TotalBsmtSF"])  # log-trafo
+#descriptive_analysis(train_data["GrLivArea"])  # log-trafo? komische figur
+#
+## FEATURE SELECTION 
+#
+#                     
+#=======
+#descriptive_analysis_num(train_data["SalePrice"])
+#descriptive_analysis_num(train_data["LotArea"])  # log transformation
+#descriptive_analysis_num(train_data["MasVnrArea"])  # ebenfalls log-traf versuchen
+#descriptive_analysis_num(train_data["TotalBsmtSF"])  # log-trafo
+#descriptive_analysis_num(train_data["GrLivArea"])  # log-trafo? komische figur
+#descriptive_analysis_cat(train_data["OverallQual"]) 
+#                    
+#>>>>>>> origin/master
 # SPLIT INTO TRAIN AND VALID
 X_train, X_valid, y_train, y_valid = split_data(train_data)
 
