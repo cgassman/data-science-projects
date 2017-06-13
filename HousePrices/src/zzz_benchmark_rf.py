@@ -280,6 +280,13 @@ regression_initial_comparison(X_train_bruteforce, X_valid_bruteforce,
 # MISSING VALUES
 analyze_missing_data(train_data)
 train_data = deal_with_missing_data(train_data)
+
+## Beispiel, um missing values eines kategoriellen features mit dem wert
+## aufzufuellen, der am haeufigsten in dem feature vorkommt 
+filled_data.BsmtFinType2 = filled_data.fillna(filled_data['BsmtFinType2'].value_counts().index[0])
+
+
+
 #print('missing values: ', train_data.isnull().sum().max())
 #print("shape of train data, after missing values deletion:", train_data.shape)
 
