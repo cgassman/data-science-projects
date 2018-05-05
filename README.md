@@ -1,2 +1,2 @@
 # data-science-projects
-contains various data science projects I am working on
+contains source files of data science projects I am working on
